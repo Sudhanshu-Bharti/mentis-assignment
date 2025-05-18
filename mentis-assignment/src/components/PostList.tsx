@@ -1,73 +1,117 @@
-import type { Post } from "../types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { useState } from "react";
+import type { Post } from "@/types";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { MessagesSquare, Pencil, Trash } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
-import { Separator } from "./ui/separator";
+import { CommentDialog } from "./CommentDialog";
 
 interface PostListProps {
   posts: Post[];
-  loading: boolean;
+  loading?: boolean;
+  onDelete?: (id: number) => Promise<void>;
+  onEdit?: (post: Post) => void;
 }
 
-export const PostList = ({ posts, loading }: PostListProps) => {
+export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [showComments, setShowComments] = useState(false);
+
+  const handleDelete = async (id: number) => {
+    if (!onDelete) return;
+    setIsDeleting(id);
+    try {
+      await onDelete(id);
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="w-full">
-            <CardHeader>
-              <Skeleton className="h-4 w-2/3" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-4 w-28" />
-            </CardFooter>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-4 w-full" />
+              <div className="flex justify-end gap-2">
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-24" />
+              </div>
+            </div>
           </Card>
         ))}
       </div>
     );
   }
 
+  if (posts.length === 0) {
+    return (
+      <Card className="p-6 text-center text-muted-foreground">
+        No posts found.
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {posts.length > 0 ? (
-        posts.map((post) => (
-          <Card
-            key={post.id}
-            className="w-full hover:shadow-lg transition-shadow"
-          >
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">
-                {post.title}
-              </CardTitle>
-              <CardDescription>
-                Post ID: {post.id} • User ID: {post.userId}
-              </CardDescription>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-              <p className="text-muted-foreground whitespace-pre-line">
-                {post.body}
-              </p>
-            </CardContent>
+    <>
+      <div className="space-y-4">
+        {posts.map((post) => (
+          <Card key={post.id} className="p-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xl font-semibold">{post.title}</h3>
+                <p className="mt-2 text-muted-foreground">{post.body}</p>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedPostId(post.id);
+                    setShowComments(true);
+                  }}
+                >
+                  <MessagesSquare className="h-4 w-4 mr-2" />
+                  Comments
+                </Button>
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(post)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(post.id)}
+                    disabled={isDeleting === post.id}
+                  >
+                    <Trash className="h-4 w-4 mr-2" />
+                    {isDeleting === post.id ? "Deleting..." : "Delete"}
+                  </Button>
+                )}
+              </div>
+            </div>
           </Card>
-        ))
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>No Posts Found</CardTitle>
-            <CardDescription>Create a new post to get started.</CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-    </div>
+        ))}
+      </div>
+
+      <CommentDialog
+        postId={selectedPostId ?? 0}
+        isOpen={showComments}
+        onOpenChange={(open) => {
+          setShowComments(open);
+          if (!open) setSelectedPostId(null);
+        }}
+      />
+    </>
   );
-};
+}

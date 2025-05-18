@@ -2,22 +2,38 @@ import { useState, useEffect } from "react";
 import type { Post, PostFormData } from "./types";
 import { PostList } from "./components/PostList";
 import { PostForm } from "./components/PostForm";
+import { EditDialog } from "./components/EditDialog";
 import { Separator } from "./components/ui/separator";
 import { Button } from "./components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Toaster, toast } from "sonner";
+import { Input } from "./components/ui/input";
 
 function App() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userIdFilter, setUserIdFilter] = useState<string>("");
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
   const postsPerPage = 5;
 
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    if (userIdFilter) {
+      setFilteredPosts(
+        posts.filter((post) => post.userId === Number(userIdFilter))
+      );
+      setCurrentPage(1);
+    } else {
+      setFilteredPosts(posts);
+    }
+  }, [userIdFilter, posts]);
 
   const fetchPosts = async () => {
     try {
@@ -27,6 +43,7 @@ function App() {
       if (!response.ok) throw new Error("Failed to fetch posts");
       const data = await response.json();
       setPosts(data);
+      setFilteredPosts(data);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
@@ -36,32 +53,32 @@ function App() {
     }
   };
 
-  const handleCreatePost = async (formData: PostFormData) => {
+  const handleCreatePost = async (data: PostFormData) => {
     setIsSubmitting(true);
-    setError(null);
-
     try {
       const response = await fetch(
         "https://jsonplaceholder.typicode.com/posts",
         {
           method: "POST",
+          body: JSON.stringify({
+            title: data.title,
+            body: data.content,
+            userId: 1,
+          }),
           headers: {
-            "Content-Type": "application/json",
+            "Content-type": "application/json; charset=UTF-8",
           },
-          body: JSON.stringify(formData),
         }
       );
 
       if (!response.ok) throw new Error("Failed to create post");
 
-      const newPost = await response.json();
-      setPosts((prev) => [newPost, ...prev]);
-      setCurrentPage(1); // Return to first page after new post
+      const post = await response.json();
+      setPosts((prev) => [post, ...prev]);
       toast.success("Post created successfully!");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to create post";
-      setError(errorMessage);
       toast.error(errorMessage);
       throw err;
     } finally {
@@ -69,11 +86,59 @@ function App() {
     }
   };
 
+  const handleUpdatePost = async (updatedPost: Post) => {
+    try {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${updatedPost.id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(updatedPost),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update post");
+
+      setPosts((prev) =>
+        prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
+      );
+      toast.success("Post updated successfully!");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update post";
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  const handleDeletePost = async (id: number) => {
+    try {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete post");
+
+      setPosts((prev) => prev.filter((post) => post.id !== id));
+      toast.success("Post deleted successfully!");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete post";
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
   // Calculate pagination values
-  const totalPages = Math.ceil(posts.length / postsPerPage);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -150,13 +215,32 @@ function App() {
                   Browse through the latest posts from the community.
                 </p>
               </div>
+              <div className="flex items-center gap-2">
+                <div className="flex max-w-[200px] items-center gap-2 rounded-lg border bg-card px-3 py-1 text-card-foreground">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="Filter by user ID"
+                    value={userIdFilter}
+                    onChange={(e) => setUserIdFilter(e.target.value)}
+                    className="h-8 w-full border-0 bg-transparent p-0 focus-visible:ring-0"
+                  />
+                </div>
+              </div>
             </div>
-            <PostList posts={currentPosts} loading={loading} />
+            <PostList
+              posts={currentPosts}
+              loading={loading}
+              onDelete={handleDeletePost}
+              onEdit={setEditingPost}
+            />
 
-            {!loading && posts.length > 0 && (
+            {!loading && filteredPosts.length > 0 && (
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   Page {currentPage} of {totalPages}
+                  {userIdFilter && ` • Filtered by User ${userIdFilter}`}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -208,6 +292,13 @@ function App() {
           </p>
         </div>
       </footer>
+
+      <EditDialog
+        post={editingPost}
+        isOpen={!!editingPost}
+        onOpenChange={(open) => !open && setEditingPost(null)}
+        onSave={handleUpdatePost}
+      />
 
       <Toaster position="top-center" expand richColors />
     </div>
