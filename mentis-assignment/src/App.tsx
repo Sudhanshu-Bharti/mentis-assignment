@@ -62,7 +62,7 @@ function App() {
           method: "POST",
           body: JSON.stringify({
             title: data.title,
-            body: data.content,
+            body: data.body, // Fixed: Changed from data.content to data.body
             userId: 1,
           }),
           headers: {
