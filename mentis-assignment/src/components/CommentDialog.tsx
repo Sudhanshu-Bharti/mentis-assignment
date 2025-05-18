@@ -70,7 +70,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
   };
 
   return (
-    <Accordion type="single" collapsible className="w-full">
+    <Accordion type="single" collapsible className="w-full ">
       <AccordionItem value="comments" className="border-0">
         <AccordionTrigger className="flex items-center gap-2 py-2 hover:no-underline text-sm group">
           <div className="flex items-center gap-1.5 text-muted-foreground group-hover:text-primary transition-colors">
@@ -80,7 +80,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
           <div className="flex-1"></div>
         </AccordionTrigger>
         <AccordionContent>
-          <div className="space-y-5 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+          <div
+            className="space-y-5 max-h-96 pr-1 overflow-y-auto overflow-x-hidden
+"
+          >
             {error ? (
               <div className="text-destructive rounded-lg bg-destructive/10 p-3 text-sm flex items-center">
                 <div className="mr-2 rounded-full bg-destructive/20 p-1 flex-shrink-0">
