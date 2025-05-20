@@ -13,6 +13,8 @@ import {
   BookOpen,
   Sparkles,
   Search,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { Input } from "./components/ui/input";
@@ -28,14 +30,34 @@ function App() {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const postsPerPage = 5;
 
-  // Active section tracking for navigation
   const [activeSection, setActiveSection] = useState<"create" | "browse">(
     "browse"
   );
 
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
   useEffect(() => {
     fetchPosts();
+
+    // Check for user dark mode preference
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add("dark");
+    }
   }, []);
+
+  // Handle theme toggle
+  const toggleTheme = () => {
+    setIsDarkMode(isDarkMode);
+    // if (!isDarkMode) {
+    //   document.documentElement.classList.add("dark");
+    // } else {
+    //   document.documentElement.classList.remove("dark");
+    // }
+  };
 
   useEffect(() => {
     if (userIdFilter) {
@@ -163,11 +185,11 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-accent/5 pr-4 pl-4">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg shadow-sm">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/70 backdrop-blur-lg shadow-sm">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="h-9 w-9 rounded-lg bg-primary/20 p-1.5 shadow-inner">
+            <div className="h-9 w-9 rounded-lg bg-primary/20 p-1.5 shadow-inner glow-effect">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -181,49 +203,49 @@ function App() {
                 <path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.532-1.056-3.94-2-5-1.786 3-3 2-4 2Z" />
               </svg>
             </div>
-            <span className="text-xl font-bold tracking-tight text-primary">
+            <span className="text-xl font-bold tracking-tight text-primary dim-text-glow">
               ThoughtStream
             </span>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-1">
-            <Button
-              variant={activeSection === "browse" ? "default" : "ghost"}
-              onClick={() => setActiveSection("browse")}
-              className="btn-hover-effect"
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Browse
-            </Button>
-            <Button
-              variant={activeSection === "create" ? "default" : "ghost"}
-              onClick={() => setActiveSection("create")}
-              className="btn-hover-effect"
-            >
-              <PenSquare className="h-4 w-4 mr-2" />
-              Create Post
-            </Button>
-          </nav>
+          <div className="flex items-center space-x-2">
+            <nav className="hidden md:flex space-x-1">
+              <Button
+                variant={activeSection === "browse" ? "default" : "ghost"}
+                onClick={() => setActiveSection("browse")}
+                className="btn-hover-effect"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Browse
+              </Button>
+              <Button
+                variant={activeSection === "create" ? "default" : "ghost"}
+                onClick={() => setActiveSection("create")}
+                className="btn-hover-effect"
+              >
+                <PenSquare className="h-4 w-4 mr-2" />
+                Create Post
+              </Button>
+            </nav>
 
-          {/* Mobile navigation */}
-          <div className="flex md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() =>
-                setActiveSection(
-                  activeSection === "browse" ? "create" : "browse"
-                )
-              }
-              className="rounded-full"
-            >
-              {activeSection === "browse" ? (
-                <PenSquare className="h-5 w-5" />
-              ) : (
-                <BookOpen className="h-5 w-5" />
-              )}
-            </Button>
+            <div className="flex md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setActiveSection(
+                    activeSection === "browse" ? "create" : "browse"
+                  )
+                }
+                className="rounded-full"
+              >
+                {activeSection === "browse" ? (
+                  <PenSquare className="h-5 w-5" />
+                ) : (
+                  <BookOpen className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -231,7 +253,7 @@ function App() {
       <main className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-4xl space-y-8 animate-fade-in">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent md:text-5xl">
+            <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent md:text-5xl dim-text-glow">
               Welcome to ThoughtStream
             </h1>
             <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
@@ -242,7 +264,7 @@ function App() {
 
           {error && (
             <div className="rounded-lg border-destructive bg-destructive/10 px-5 py-4 text-destructive flex items-center">
-              <div className="mr-2 rounded-full bg-destructive/20 p-1">
+              <div className="mr-2 rounded-full bg-destructive/20 p-1 flex-shrink-0">
                 <svg
                   width="16"
                   height="16"
@@ -268,7 +290,9 @@ function App() {
               <div className="flex items-center">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center space-x-2">
-                    <PenSquare className="h-5 w-5 text-primary" />
+                    <div className="p-1.5 bg-primary/20 rounded-full">
+                      <PenSquare className="h-4 w-4 text-primary" />
+                    </div>
                     <h2 className="text-2xl font-semibold tracking-tight">
                       Create Post
                     </h2>
@@ -280,7 +304,7 @@ function App() {
                 <Button
                   variant="outline"
                   onClick={() => setActiveSection("browse")}
-                  className="hidden md:flex"
+                  className="hidden md:flex btn-hover-effect"
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
                   Browse Posts
@@ -295,7 +319,9 @@ function App() {
             </section>
           )}
 
-          {activeSection !== "create" && <Separator className="my-8" />}
+          {activeSection !== "create" && (
+            <Separator className="my-8 opacity-50" />
+          )}
 
           <section
             className={`space-y-6 ${
@@ -314,7 +340,7 @@ function App() {
                 </p>
               </div>
               <div className="flex items-center gap-2 self-start">
-                <div className="flex max-w-[200px] items-center gap-2 rounded-lg border bg-card px-3 py-1.5 text-card-foreground shadow-sm transition-all focus-within:ring focus-within:ring-primary/30">
+                <div className="flex max-w-[200px] items-center gap-2 rounded-lg border bg-card/70 backdrop-blur-sm px-3 py-1.5 text-card-foreground shadow-sm transition-all focus-within:ring focus-within:ring-primary/30 dim-light-border">
                   <Search className="h-4 w-4 text-muted-foreground" />
                   <Input
                     type="number"
@@ -329,7 +355,7 @@ function App() {
                   <Button
                     variant="outline"
                     onClick={() => setActiveSection("create")}
-                    className="hidden md:flex"
+                    className="hidden md:flex btn-hover-effect"
                   >
                     <PenSquare className="h-4 w-4 mr-2" />
                     New Post
@@ -347,7 +373,7 @@ function App() {
               />
 
               {!loading && filteredPosts.length > 0 && (
-                <div className="flex items-center justify-between mt-6 bg-background/80 backdrop-blur p-3 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between mt-6 bg-background/60 backdrop-blur-sm p-3 rounded-lg shadow-sm dim-light-border">
                   <p className="text-sm text-muted-foreground">
                     Page {currentPage} of {totalPages}
                     {userIdFilter && ` • Filtered by User ${userIdFilter}`}
@@ -380,34 +406,6 @@ function App() {
           </section>
         </div>
       </main>
-
-      <footer className="border-t bg-muted/30 backdrop-blur-sm py-6 mt-12">
-        <div className="container flex flex-col md:flex-row h-14 items-center justify-between text-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © 2025 ThoughtStream. All rights reserved.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Built with{" "}
-            <a
-              href="https://ui.shadcn.com"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline decoration-primary underline-offset-4 hover:text-primary transition-colors"
-            >
-              shadcn/ui
-            </a>
-            {" • "} Posts from{" "}
-            <a
-              href="https://jsonplaceholder.typicode.com"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline decoration-primary underline-offset-4 hover:text-primary transition-colors"
-            >
-              JSONPlaceholder
-            </a>
-          </p>
-        </div>
-      </footer>
 
       <EditDialog
         post={editingPost}

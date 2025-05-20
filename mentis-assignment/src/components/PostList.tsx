@@ -9,6 +9,7 @@ import {
   UserCircle,
   MessageCircle,
   Share2,
+  Heart,
   MoreHorizontal,
 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
@@ -25,6 +26,7 @@ interface PostListProps {
 export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [expandedPost, setExpandedPost] = useState<number | null>(null);
+  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
   const handleDelete = async (id: number) => {
     if (!onDelete) return;
@@ -44,13 +46,25 @@ export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
     }
   };
 
+  const toggleLike = (id: number) => {
+    setLikedPosts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card
             key={i}
-            className="overflow-hidden border-border/40 bg-card/70 backdrop-blur-sm"
+            className="overflow-hidden border-border/40 bg-card/70 backdrop-blur-sm dim-light-border"
           >
             <div className="flex items-center gap-4 p-6 border-b border-border/40">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -75,9 +89,9 @@ export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
 
   if (posts.length === 0) {
     return (
-      <Card className="p-8 text-center border-dashed border-2">
+      <Card className="p-8 text-center border-dashed border-2 bg-card/60 backdrop-blur-sm">
         <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="rounded-full bg-primary/10 p-3">
+          <div className="rounded-full bg-primary/10 p-3 glow-effect">
             <MessageCircle className="h-6 w-6 text-primary" />
           </div>
           <h3 className="font-medium text-lg">No posts found</h3>
@@ -94,6 +108,7 @@ export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
     <div className="space-y-6">
       {posts.map((post) => {
         const isExpanded = expandedPost === post.id;
+        const isLiked = likedPosts.has(post.id);
         const truncatedBody =
           post.body.length > 150 && !isExpanded
             ? post.body.substring(0, 150) + "..."
@@ -102,11 +117,11 @@ export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
         return (
           <Card
             key={post.id}
-            className="overflow-hidden border-border/40 bg-card/70 backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+            className="overflow-hidden border-border/40 bg-card/70 backdrop-blur-sm transition-all duration-300 hover:shadow-md card-hover dim-light-border"
           >
-            <div className="flex items-center gap-3 p-4 border-b border-border/40">
+            <div className="flex items-center gap-3 p-4 border-b border-border/30">
               <Avatar className="h-10 w-10 border ring-1 ring-primary/20">
-                <div className="bg-primary/10 text-primary flex h-full w-full items-center justify-center rounded-full font-semibold">
+                <div className="bg-primary/10 text-primary flex h-full w-full items-center justify-center rounded-full font-semibold glow-effect">
                   U{post.userId}
                 </div>
               </Avatar>
@@ -135,7 +150,7 @@ export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
                 {post.body.length > 150 && (
                   <button
                     onClick={() => toggleExpand(post.id)}
-                    className="ml-1 text-primary hover:underline font-medium"
+                    className="ml-1 text-primary hover:underline font-medium transition-colors"
                   >
                     {isExpanded ? "Read less" : "Read more"}
                   </button>
@@ -143,34 +158,51 @@ export function PostList({ posts, loading, onDelete, onEdit }: PostListProps) {
               </p>
             </div>
 
-            <div className="border-t border-border/40 px-6 py-3">
+            <div className="border-t border-border/30 px-6 py-3">
               <CommentSection postId={post.id} />
             </div>
 
-            <div className="flex items-center justify-between px-6 py-3 bg-muted/20">
-              <div className="flex items-center space-x-1">
+            <div className="flex items-center justify-between px-6 py-3 bg-muted/20 subtle-gradient">
+              <div className="flex items-center space-x-3">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-foreground px-2"
+                  className={`text-muted-foreground hover:text-primary px-2 ${
+                    isLiked ? "text-primary" : ""
+                  }`}
+                  onClick={() => toggleLike(post.id)}
                 >
-                  <Share2 className="h-4 w-4 mr-1" />
-                  Share
+                  <Heart
+                    className={`h-4 w-4 mr-1 transition-transform ${
+                      isLiked ? "fill-primary scale-110" : ""
+                    }`}
+                  />
+                  <span>{isLiked ? "Liked" : "Like"}</span>
                 </Button>
                 <div className="h-4 border-r border-border/60"></div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-primary px-2"
-                  onClick={() => onEdit && onEdit(post)}
-                  disabled={!onEdit}
+                  className="text-muted-foreground hover:text-accent px-2"
                 >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  Edit
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Share
                 </Button>
               </div>
 
-              <div>
+              <div className="flex items-center space-x-2">
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-primary px-2"
+                    onClick={() => onEdit && onEdit(post)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                )}
+
                 {onDelete && (
                   <Button
                     variant="ghost"

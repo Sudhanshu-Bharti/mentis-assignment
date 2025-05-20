@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Post } from "@/types";
 import {
   Dialog,
@@ -29,14 +29,13 @@ export function EditDialog({
   const [title, setTitle] = useState(post?.title ?? "");
   const [body, setBody] = useState(post?.body ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Update local state when post changes
-  useState(() => {
+  useEffect(() => {
     if (post) {
       setTitle(post.title);
       setBody(post.body);
     }
-  });
+  }, [post]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,18 +54,19 @@ export function EditDialog({
       setIsSubmitting(false);
     }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl bg-card shadow-lg border border-border">
         <DialogHeader className="space-y-3">
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-primary/20 mr-3 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-full bg-primary/20 mr-3 flex items-center justify-center shadow-sm">
               <Pencil className="h-4 w-4 text-primary" />
-            </div>
+            </div>{" "}
             <div>
-              <DialogTitle className="text-xl">Edit Post</DialogTitle>
-              <DialogDescription className="text-muted-foreground text-sm">
+              <DialogTitle className="text-xl text-white dark:text-card-foreground">
+                Edit Post
+              </DialogTitle>
+              <DialogDescription className="text-white dark:text-muted-foreground text-sm">
                 Make changes to your post here. Click save when you're done.
               </DialogDescription>
             </div>
@@ -74,12 +74,17 @@ export function EditDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+          {" "}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="title" className="text-sm font-medium">
+              {" "}
+              <Label
+                htmlFor="title"
+                className="text-sm font-medium text-white dark:text-card-foreground"
+              >
                 Title
               </Label>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-white dark:text-muted-foreground">
                 {title.length}/100
               </span>
             </div>
@@ -89,17 +94,20 @@ export function EditDialog({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter title"
               required
-              className="h-12 rounded-lg bg-background border-border/60 focus-visible:ring-primary/30"
+              className="h-12 rounded-lg bg-background border-input shadow-sm focus-visible:ring-primary/30 text-white dark:text-foreground"
               disabled={isSubmitting}
             />
           </div>
-
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="body" className="text-sm font-medium">
+              {" "}
+              <Label
+                htmlFor="body"
+                className="text-sm font-medium text-white dark:text-card-foreground"
+              >
                 Content
               </Label>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-white dark:text-muted-foreground">
                 {body.length}/1000
               </span>
             </div>
@@ -109,36 +117,40 @@ export function EditDialog({
               onChange={(e) => setBody(e.target.value)}
               placeholder="Enter content"
               required
-              className="min-h-[180px] resize-none rounded-lg bg-background border-border/60 focus-visible:ring-primary/30"
+              className="min-h-[180px] resize-none rounded-lg bg-background border-input shadow-sm focus-visible:ring-primary/30 text-white dark:text-foreground"
               disabled={isSubmitting}
             />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
+          </div>{" "}
+          <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="rounded-full"
+              className="rounded-full shadow-sm border-border"
             >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
+              <X className="h-4 w-4 mr-1" />{" "}
+              <span className="text-white dark:text-inherit">Cancel</span>
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-full"
+              className="rounded-full shadow-md text-white dark:text-inherit"
             >
               {isSubmitting ? (
                 <>
+                  {" "}
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
+                  <span className="text-white dark:text-inherit">
+                    Saving...
+                  </span>
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save changes
+                  <span className="text-white dark:text-inherit">
+                    Save changes
+                  </span>
                 </>
               )}
             </Button>
